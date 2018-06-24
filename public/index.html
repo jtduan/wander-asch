@@ -3,12 +3,35 @@
 
 <head>
     <meta charset="UTF-8">
-    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
-    <title>Crypto Currency Time</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+    <script src="http://lib.sinaapp.com/js/jquery/1.12.4/jquery-1.12.4.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <title>Wander Compete</title>
 </head>
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
+        toastr.options = {
+            closeButton: false,                                            // 是否显示关闭按钮，（提示框右上角关闭按钮）
+            debug: false,                                                    // 是否使用deBug模式
+            progressBar: false,                                            // 是否显示进度条，（设置关闭的超时时间进度条）
+            positionClass: "toast-top-center",              // 设置提示款显示的位置toast-top-full-width
+            onclick: null,                                                     // 点击消息框自定义事件
+            showDuration: "300",                                      // 显示动画的时间
+            hideDuration: "1000",                                     //  消失的动画时间
+            timeOut: "2000",                                             //  自动关闭超时时间
+            extendedTimeOut: "1000",                             //  加长展示时间
+            showEasing: "swing",                                     //  显示时的动画缓冲方式
+            hideEasing: "linear",                                       //   消失时的动画缓冲方式
+            showMethod: "fadeIn",                                   //   显示时的动画方式
+            hideMethod: "fadeOut"                                   //   消失时的动画方式
+        };
+
         var DAPP_ID = window.location.pathname.split('/')[2];
         var BASE_URL = '/api/dapps/' + DAPP_ID;
         var COUNT_PER_PAGE = 20;
@@ -19,6 +42,18 @@
         var UserInfo = {
             secret: '',
         };
+
+        $.ajax({
+            type: 'GET',
+            url: BASE_URL + '/getgames',
+            success: function (ret) {
+                for (let i = 0; i < ret.length; i++) {
+                    let json = ret[i];
+                    $("#Mlists").append("<option value='" + json.id + "'>" + "胜赔率" + json.leftp + ";平赔率" + json.midp + ";负赔率" + json.rightp + "</option>");
+                }
+            }
+        });
+
         function updateBalanceView(balances) {
             var $table = $('#balanceTable');
             $table.find('tr:not(:first)').remove();
@@ -30,30 +65,16 @@
                 $table.append(tr);
             }
         }
-        function loadContracts() {
-            $.ajax({
-                type: 'GET',
-                url: BASE_URL + '/contracts',
-                dataType: 'json',
-                success: function (ret) {
-                    console.log(ret)
-                    var $contractOptions = $('#contractOptions')
-                    $contractOptions.empty()
-                    for (var i in ret.contracts) {
-                        var c = ret.contracts[i]
-                        $contractOptions.append('<option value="' + c.type + '">' + c.type + ': ' + c.name + '</option>')
-                    }
-                }
-            })
-        }
+
         function onLogin(account) {
             State.isLogin = true;
             $('#loginBtn').val('Logout');
             $('#secretInput').hide();
+            $('#secretInputHolder').hide();
             $('#mainPanel').show();
             updateBalanceView(account.balances);
-            loadContracts()
         }
+
         function login(secret) {
             $.ajax({
                 type: 'POST',
@@ -62,10 +83,10 @@
                     secret: secret
                 },
                 dataType: 'json',
-                success: function(ret) {
+                success: function (ret) {
                     console.log(ret);
                     if (!ret.success) {
-                        alert(ret.error);
+                        toastr.error(ret.error);
                         return;
                     }
                     UserInfo.secret = secret;
@@ -75,24 +96,27 @@
                 }
             });
         }
+
         function getBalances(address) {
             $.ajax({
                 type: 'GET',
                 url: BASE_URL + '/balances/' + address,
                 dataType: 'json',
-                success: function(ret) {
+                success: function (ret) {
                     console.log(ret);
                     if (!ret.success) {
-                        alert(ret.error);
+                        toastr.error(ret.error);
                         return;
                     }
                     updateBalanceView(ret.balances)
                 }
             });
         }
+
         function logout() {
             $('#loginBtn').val('login');
             $('#secretInput').show();
+            $('#secretInputHolder').show();
             $('#mainPanel').hide();
             State.isLogin = false;
             if (State.timer) {
@@ -105,7 +129,7 @@
             if (UserInfo.publicKey) {
                 getBalances(UserInfo.address);
             }
-        }, 10 * 1000);
+        }, 3 * 1000);
         $('#loginBtn').click(function () {
             if (State.isLogin) {
                 logout();
@@ -113,90 +137,289 @@
                 login($('#secretInput').val());
             }
         });
-        $('#invokeBtn').click(function () {
-            var args = $('#contractArgs').val().split('\n')
-            var fee = '10000000'
-            var data = {
-                secret: UserInfo.secret,
-                fee: fee,
-                type: Number($('#contractOptions').val()),
-                args: JSON.stringify(args)
-            }
-            console.log('invoke', data)
-            $.ajax({
-                type: 'PUT',
-                url: BASE_URL + '/transactions/unsigned',
-                data: data,
-                dataType: 'json',
-                success: function(ret) {
-                    console.log(ret);
-                    if (!ret.success) {
-                        alert('Error: ' + ret.error);
-                        return;
+
+        $('#button1').click(function () { //提交投标号码
+            let zhuang = $("#Mlists").find("option:selected").val();
+            let val = $('input:radio[name="optionsRadios"]:checked').val();
+            // alert(zhuang);
+            if (zhuang == 0) {
+                // alert("无庄，旧模型");
+                $.ajax({
+                    type: 'GET',
+                    url: BASE_URL + '/orders/' + UserInfo.address + '/' + val + '/',
+                    success: function (ret) {
+                        toastr.info(JSON.stringify(ret));
                     }
-                    alert("Success! " + ret.transactionId);
-                }
-            });
-        })
-        $('#accessBtn').click(function () {
-            var params = $('#accessParams').val()
-            var jsonParams = null
-            try {
-                if (params) {
-                    var jsonParams = JSON.parse(params)
-                }
-            } catch (e) {
-                alert('Invalid params')
-                return
+                });
+            } else {
+                // alert("有庄，新模型");
+                $.ajax({
+                    type: 'GET',
+                    url: BASE_URL + '/newplay/' + UserInfo.address + '/' + zhuang + '/' + val + '/',
+                    success: function (ret) {
+                        toastr.info(JSON.stringify(ret));
+                    }
+                });
             }
-            
+        });
+
+        $('#button2').click(function () { //开奖
+            toastr.info("success");
             $.ajax({
                 type: 'GET',
-                url: BASE_URL + $('#accessUrl').val(),
-                data: jsonParams,
-                dataType: 'json',
+                url: BASE_URL + '/change/' + UserInfo.address,
                 success: function (ret) {
-                    console.log(ret)
-                    $('#accessResponse').val(JSON.stringify(ret, null, 4));
+                    toastr.info(JSON.stringify(ret));
                 }
-            })
-        })
+            });
+        });
+
+        $('#button6').click(function () { //庄家版开奖
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/open',
+                success: function (ret) {
+                    toastr.info(JSON.stringify(ret));
+                }
+            });
+        });
+
+        $('#button3').click(function () { //查看竞猜历史
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/getAll/' + UserInfo.address,
+                success: function (ret) {
+                    $("#history").show();
+                    $("#historyTable tr:not(:first)").html("");
+                    for (let i = 0; i < ret.length; i++) {
+                        let json = ret[i];
+                        let status = "暂未开奖";
+                        if (json.status === 2) {
+                            status = "已派奖";
+                        } else if (json.status === 3) {
+                            status = "未中奖";
+                        }
+                        let trHTML = "<tr><td>" + json.number +
+                            "</td><td>3</td><td>" + status + "</td></tr>";
+                        $("#historyTable").append(trHTML);
+                    }
+                }
+            });
+        });
+
+        $('#button4').click(function () { //坐庄赔率上传
+            var left = $("#banker1").val();
+            var mid = $("#banker2").val();
+            var right = $("#banker3").val();
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/newgame/' + UserInfo.address + "/" + left + "/" + mid + "/" + right + "/1000",
+                success: function (ret) {
+                    toastr.info(ret);
+                }
+            });
+        });
+
+        $('#button5').click(function () { //坐庄历史数据
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/getAll/' + UserInfo.address,
+                success: function (ret) {
+                    $("#history").show();
+                    $("#historyTable tr:not(:first)").html("");
+                    for (let i = 0; i < ret.length; i++) {
+                        let json = ret[i];
+                        let status = "暂未开奖";
+                        if (json.status === 2) {
+                            status = "已派奖";
+                        } else if (json.status === 3) {
+                            status = "未中奖";
+                        }
+                        let trHTML = "<tr><td>" + json.number +
+                            "</td><td>3</td><td>" + status + "</td></tr>";
+                        $("#historyTable").append(trHTML);
+                    }
+                }
+            });
+        });
+
+        $('#RechargeButton').click(function () { //充值
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/charge/' + UserInfo.secret + "/" + UserInfo.address,
+                success: function (ret) {
+                    toastr.info(JSON.stringify(ret));
+                }
+            });
+        });
+
+        $('#WithDrawButton').click(function () { //提现
+            $.ajax({
+                type: 'GET',
+                url: BASE_URL + '/withdraw/' + UserInfo.address,
+                success: function (ret) {
+                    toastr.info(JSON.stringify(ret));
+                }
+            });
+        });
+
+        $('#tab1').click(function () { //适配jquery切换标签
+            $("#android").show();
+            $("#ios").hide();
+        });
+        $('#tab2').click(function () { //适配jquery切换标签
+            $("#android").hide();
+            $("#ios").show();
+        });
     });
 </script>
 
 <body>
-    <h1>Crypto Currency Time</h1>
-    <div>
-        <input type="password" id="secretInput" placeholder="Please input master secret">
-        <input type="button" value="Login" id="loginBtn">
+<div class="container">
+    <h1>Compete Demo - Wander</h1>
+    <div class="form-group">
+        <div class="form-group">
+            <label id="secretInputHolder">输入密钥以登录</label>
+            <input type="password" class="form-control" id="secretInput" placeholder="Please input master secret">
+        </div>
+        <input type="button" class="btn btn-default" value="Login" id="loginBtn">
     </div>
     <div id="mainPanel" style="display: none;">
-        <hr/>
-        <h2>Account balances</h2>
-        <div>
-            <table id="balanceTable" width="200px" border="1">
-                <tr>
-                    <th>Currency</th>
-                    <th>Balance</th>
-                </tr>
-            </table>
+        <h2>余额信息</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <table id="balanceTable" class="table table-bordered">
+                    <tr>
+                        <th>Currency</th>
+                        <th>Balance</th>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <input type="button" class="btn btn-default" value="充值" id="RechargeButton">
+                <input type="button" class="btn btn-default" value="提现" id="WithDrawButton">
+            </div>
         </div>
 
-        <hr/>
-        <h2>Contract invoke</h2>
-        <div>
-            <select id="contractOptions"></select><input type="button" id="invokeBtn" value="Invoke"><br/>
-            <textarea rows="6" cols="60" id="contractArgs" placeholder="Please input the arguments"></textarea><br/>
-        </div>
+        <ul id="myTab" class="nav nav-tabs">
+            <li class="active">
+                <a id="tab1" data-toggle="tab">
+                    我要竞猜
+                </a>
+            </li>
+            <li><a id="tab2" data-toggle="tab">我要坐庄</a></li>
+        </ul>
 
-        <hr/>
-        <h2>Interface access</h2>
-        <div>
-            <input type="text" id="accessUrl" placeholder="Please input url"><input type="button" id="accessBtn" value="Access"><br/>
-            <textarea rows="10" cols="60" id="accessParams" placeholder="Please input params"></textarea><br/>
-            <textarea rows="20" cols="60" id="accessResponse"></textarea><br/>
+        <div id="myTabContent" class="tab-content">
+            <div class="tab-pane active" id="android">
+                <h2>竞猜！</h2>
+                <div class="row">
+                    <div style="margin: 25px">
+                        <form>
+                            <div class="row">
+                                <div class="form-group">
+                                    <select class="form-control" id="Mlists">
+                                        <option value=0 selected>--请选择--</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="form-group">
+                                    <label>胜平负竞猜 </label>
+                                    <!--<input type="text" class="form-control" id="exampleInputEmail1"-->
+                                    <!--placeholder="请输入竞猜号码">-->
+                                    <div class="radio-inline">
+                                        <label>
+                                            <input type="radio" name="optionsRadios" id="optionsRadios1"
+                                                   value="1" checked> 胜
+                                        </label>
+                                    </div>
+                                    <div class="radio-inline">
+                                        <label>
+                                            <input type="radio" name="optionsRadios" id="optionsRadios2"
+                                                   value="2">平
+                                        </label>
+                                    </div>
+                                    <div class="radio-inline">
+                                        <label>
+                                            <input type="radio" name="optionsRadios" id="optionsRadios3"
+                                                   value="3">负
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <input type="button" class="btn btn-default" id="button1" value="提交竞猜">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="form-group">
+                                    <input type="button" class="btn btn-default" id="button2" value="立即开奖">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="form-group">
+                                    <input type="button" class="btn btn-default" id="button3" value="竞猜纪录查询">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div id="history" style="display: none">
+                        <table id="historyTable" class="table table-striped">
+                            <tr>
+                                <th>竞猜号码</th>
+                                <th>开奖号码</th>
+                                <th>奖金状态</th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="ios">
+                <h2>坐庄！</h2>
+                <div class="row">
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label class="control-label">胜赔率</label>
+                                <input type="text" class="form-control" id="banker1"
+                                       placeholder="请输入竞猜号码">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="control-label">平赔率</label>
+                                <input type="text" class="form-control" id="banker2"
+                                       placeholder="请输入竞猜号码">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="control-label">负赔率</label>
+                                <input type="text" class="form-control" id="banker3"
+                                       placeholder="请输入竞猜号码">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 25px;margin-left: 0px">
+                        <div class="form-group">
+                            <input type="button" class="btn btn-default" id="button4" value="提交">
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 25px;margin-left: 0px">
+                        <div class="form-group">
+                            <input type="button" class="btn btn-default" id="button6" value="立即开奖">
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
         </div>
     </div>
+</div>
 </body>
 
 </html>

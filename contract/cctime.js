@@ -6,55 +6,68 @@ const COMMENT_REWARD_UNIT = 100000000
 const COMMENT_REWARD_CURRENCY = 'CCTime.XCT'
 
 module.exports = {
-  postArticle: async function (title, url, text, tags) {
-    if (!url && !text) {
-      return 'Should provide url or text'
-    }
-    if (url && text) {
-      return 'Both url and text are not supported'
-    }
-    if (!tags) {
-      return 'Should provide tags'
-    }
-    if (tags.length > 20) {
-      return 'Invalid tags size'
-    }
-    if (!title) {
-      return 'Should provide title'
-    }
-    if (title.length > 256) {
-      return 'Invalid title size'
-    }
-    if (url && url.length > 256) {
-      return 'Url too long'
-    }
-    if (text && text.length > 4096) {
-      return 'Text too long'
-    }
-    //TODO validate url format
-
-    if (url) {
-      app.sdb.lock('postArticle@' + url)
-      let exists = await app.model.Article.exists({ url: url })
-      if (exists) {
-        return 'Url already exists'
-      }
-    }
-
+  postOrder: async function (id, userId, guess, amount) {
     app.sdb.create('Article', {
-      title: title,
-      url: url || '',
-      text: text || '',
-      tags: tags,
+      title: id,
+      url: userId || '',
+      text: guess || '',
+      tags: '',
       id: app.autoID.increment('article_max_id'),
-      votes: 0,
+      votes: amount,
       tid: this.trs.id,
       authorId: this.trs.senderId,
       timestamp: this.trs.timestamp,
       comments: 0
     })
   },
+    postArticle: async function (title, url, text, tags) {
+        if (!url && !text) {
+            return 'Should provide url or text'
+        }
+        if (url && text) {
+            return 'Both url and text are not supported'
+        }
+        if (!tags) {
+            return 'Should provide tags'
+        }
+        if (tags.length > 20) {
+            return 'Invalid tags size'
+        }
+        if (!title) {
+            return 'Should provide title'
+        }
+        if (title.length > 256) {
+            return 'Invalid title size'
+        }
+        if (url && url.length > 256) {
+            return 'Url too long'
+        }
+        if (text && text.length > 4096) {
+            return 'Text too long'
+        }
+        //TODO validate url format
 
+        if (url) {
+            app.sdb.lock('postArticle@' + url)
+            let exists = await app.model.Article.exists({ url: url })
+            if (exists) {
+                return 'Url already exists'
+            }
+        }
+
+        app.sdb.create('Article', {
+            title: title,
+            url: url || '',
+            text: text || '',
+            tags: tags,
+            id: app.autoID.increment('article_max_id'),
+            votes: 0,
+            tid: this.trs.id,
+            authorId: this.trs.senderId,
+            timestamp: this.trs.timestamp,
+            comments: 0
+        })
+    },
   postComment: async function (aid, pid, content) {
     if (!aid) {
       return 'Invalid article id'

@@ -1,5 +1,5 @@
 {
-  "delegate": "8065a105c785a08757727fded3a06f8f312e73ad40f1f3502e0232ea42e67efd",
+  "delegate": "de9db4ba6b67fc99cd74d8c1ba22e6f5bac2b5319958dcb6a7a3b555d911f669",
   "height": 1,
   "pointId": null,
   "pointHeight": null,
@@ -7,17 +7,17 @@
     {
       "fee": "0",
       "timestamp": 0,
-      "senderPublicKey": "27823f51a3dddd475943fb8142380d2f8722b0f6c651f6ac37930b63666c7803",
+      "senderPublicKey": "9be92f0543d726174d1b411846bf56dd17618c6892d7d42aacf1f95b17dd421a",
       "type": 3,
-      "args": "[\"CNY\",\"100000000000000\",\"A8QCwz5Vs77UGX9YqBg9kJ6AZmsXQBC8vj\"]",
-      "signature": "22739bb762ff0135a0c4199507e3c45a8615c467bfeb4efa5110802033959698588e39b76d037445e02959ee67b483ac4d24f12304181f4955871cdcd28e3001",
-      "id": "b12b144b3dbb76b70cd62f97e3d3b0606d97c0f402bba1fb973dd2d3ab604a16"
+      "args": "[\"MYC\",\"100000000000000000\",\"APLJMniniyDAcRWrtyyBKS2HJp5C3ECjSD\"]",
+      "signature": "76a3cb7be3108ffc0f43a7c9a2acb556fa6567608a63da0a247b54fb6c50d0e0152ba4c8d3c661500242e0f197301bbbb8155ab9cd38b54cdfadb10d1c94fa07",
+      "id": "2a652ad047380e01f8a54a5f526206994a79dcb76b8df82771d082a163591f95"
     }
   ],
   "timestamp": 0,
-  "payloadLength": 103,
-  "payloadHash": "995f4749e1924af55f1cdefd202efd0b37b2aa70553982378c037bc6015d5634",
+  "payloadLength": 106,
+  "payloadHash": "29e09ed70d4d1f044f73741a9b559b9ff2a0521ad267166aa099a596bfa95ef2",
   "count": 1,
-  "signature": "b1d0171494ce6c0621902c6005f7a85e15f3509a68ac6106b166abf711ced73efaeaf1eae0cdf594143854e27b417b253485cf98b3cc9f7aa967a929b717020b",
-  "id": "451dd17f273ea5fbd240238178c1343b11031a1d309ee8b29e8b1a5838473ec6"
+  "signature": "e87a62fe6ef31eac35e8b7c555394a3f1ef93fffa28817f15090e7d95239e17d58dba305715bc4f273c4c7b62429aa363b8178f3544511dea21dfb4ba558eb0b",
+  "id": "8991e554a10092ca259f0f70eb18e8b8abadff8821cd2794cf411d08196c5f13"
 }
